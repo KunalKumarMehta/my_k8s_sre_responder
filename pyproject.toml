@@ -1,0 +1,39 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+# All rights reserved.
+#
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree.
+
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openenv-my_k8s_sre_responder"
+version = "0.1.0"
+description = "My K8s Sre Responder environment for OpenEnv"
+requires-python = ">=3.10"
+dependencies = [
+    # Core OpenEnv runtime (provides FastAPI server + HTTP client types)
+    # install from github
+    # "openenv-core[core] @ git+https://github.com/meta-pytorch/OpenEnv.git",
+    "openenv-core[core]>=0.2.1",
+    # Environment-specific dependencies
+    "openai>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.0.0",
+]
+
+[project.scripts]
+# Server entry point - enables running via: uv run --project . server
+# or: python -m my_k8s_sre_responder.server.app
+server = "my_k8s_sre_responder.server.app:main"
+
+[tool.setuptools]
+include-package-data = true
+packages = ["my_k8s_sre_responder", "my_k8s_sre_responder.server"]
+package-dir = { "my_k8s_sre_responder" = ".", "my_k8s_sre_responder.server" = "server" }
