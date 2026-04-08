@@ -1382,9 +1382,9 @@ class MyK8sSreResponderEnvironment(Environment):
             # Best: 0.0 (resolved instantly), Worst: 1.0 (never resolved)
             normalized_mttr = mttr_steps / episode_len
             mttr_score = max(0.0, 1.0 - normalized_mttr)
-            # Bonus for resolving faster than target
+            # Bonus for resolving faster than target (capped at <1.0)
             if mttr_steps <= max_mttr:
-                mttr_score = min(1.0, mttr_score * 1.2)
+                mttr_score = min(0.99, mttr_score * 1.2)
         else:
             mttr_score = 0.0  # Never resolved
 
@@ -1394,14 +1394,14 @@ class MyK8sSreResponderEnvironment(Environment):
         else:
             sla_compliance = 1.0
 
-        # Bonus for staying under violation target
+        # Bonus for staying under violation target (capped at <1.0)
         max_violation = task["success_criteria"]["max_sla_violation_s"]
         if self._sla_violation_seconds <= max_violation:
-            sla_compliance = min(1.0, sla_compliance * 1.1)
+            sla_compliance = min(0.99, sla_compliance * 1.1)
 
-        # Root cause quality
+        # Root cause quality (capped at <1.0)
         if self._root_cause_fixed and self._recurrence_count == 0:
-            root_cause_quality = 1.0
+            root_cause_quality = 0.99
         elif self._root_cause_fixed:
             root_cause_quality = 0.7  # Fixed but had recurrence
         elif self._mitigation_applied:
@@ -1411,8 +1411,10 @@ class MyK8sSreResponderEnvironment(Environment):
         else:
             root_cause_quality = 0.0
 
-        # Weighted total
+        # Weighted total (capped at <1.0)
         overall = 0.45 * mttr_score + 0.35 * sla_compliance + 0.20 * root_cause_quality
+        # Ensure strictly between 0 and 1
+        overall = max(0.001, min(0.99, overall))
 
         # Success check
         criteria = task["success_criteria"]
